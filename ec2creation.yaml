@@ -1,0 +1,44 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Provision EC2 instance
+      amazon.aws.ec2_instance:
+        key_name: AWS-Ansible
+        region: ap-south-2
+        instance_type: t3.micro
+        image_id: ami-0867df9d01e38f97d
+        wait: yes
+        wait_timeout: 500
+        count: 1
+        tags:
+          Name: AWS-Ansible-final_script  
+        volumes:
+          - device_name: /dev/sdb
+            ebs:
+              volume_type: gp3
+              volume_size: 8
+              delete_on_termination: yes
+      register: ec2
+
+    - name: Debug EC2 information
+      debug:
+        var: ec2
+
+    - name: Register instance IDs
+      set_fact:
+        instance_ids: "{{ ec2.instances | map(attribute='instance_id') | list }}"
+
+    - name: Stop the instances
+      amazon.aws.ec2_instance:
+        instance_ids: '{{ instance_ids }}'
+        region: ap-south-2
+        state: stopped
+        wait: True
+
+    - name: Terminate the instances
+      amazon.aws.ec2_instance:
+        instance_ids: '{{ instance_ids }}'
+        region: ap-south-2
+        state: absent  
+        wait: True
+
