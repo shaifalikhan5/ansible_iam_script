@@ -1,0 +1,21 @@
+---
+- name: Deleting IAM Users
+  hosts: localhost
+  connection: local  # Ensure that the playbook runs locally
+  become: true
+  vars:
+    users_to_delete:
+      - "username1"
+      - "username2"
+      - "username3"
+      - "username4"
+
+  tasks:
+    - name: Delete IAM users
+      community.aws.iam_user:
+        name: "{{ item }}"
+        state: absent  # Set state to absent to delete the user
+      loop: "{{ users_to_delete }}"
+      tags:
+        - iam_user_delete
+ 

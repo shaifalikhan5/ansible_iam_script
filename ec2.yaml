@@ -1,0 +1,37 @@
+---
+- name: Start testing server
+  hosts: localhost
+  gather_facts: false
+  vars:
+    instance_ids:
+      - 'i-02fdd5a5d83c0bc58'
+      - 'i-0db0b664b8ea67e08'
+    region: ap-south-2
+    vpc_subnet_id: subnet-0b2bc34fec4f37c86
+
+  tasks:
+    - name: Start the testing instances
+      amazon.aws.ec2_instance:  
+        instance_ids: '{{ instance_ids }}'
+        region: '{{ region }}'
+        state: running
+        wait: True
+        vpc_subnet_id: '{{ vpc_subnet_id }}'
+
+
+    - name: Stop the testing instances
+      amazon.aws.ec2_instance:  
+        instance_ids: '{{ instance_ids }}'
+        region: '{{ region }}'
+        state: stopped
+        wait: True
+        vpc_subnet_id: '{{ vpc_subnet_id }}'
+
+    - name: Terminate the testing instance
+      amazon.aws.ec2_instance:  
+        instance_ids: '{{ instance_ids }}'
+        region: '{{ region }}'
+        state: absent
+        wait: True
+        vpc_subnet_id: '{{ vpc_subnet_id }}'
+

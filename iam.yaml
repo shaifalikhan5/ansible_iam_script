@@ -1,0 +1,63 @@
+---
+- name: Creating IAM Users
+  hosts: localhost
+  gather_facts: false
+  become: true
+  vars:
+    user1: "username1"
+    user2: "username2"
+    user3: "username3"
+    user4: "username4"
+    temp_pass: "TemporaryPassword123!"  # Example temporary password
+
+  tasks:
+    - name: Create IAM users
+      community.aws.iam_user:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ user1 }}"
+        - "{{ user2 }}"
+        - "{{ user3 }}"
+        - "{{ user4 }}"
+      tags:
+        - iam_user_new
+        - iam_user_only
+        - iam_user_key
+        - iam_user_pass
+
+    - name: Create user's access key
+      shell: 'aws iam create-access-key --user-name "{{ item }}" >> key_list.txt'
+      loop:
+        - "{{ user1 }}"
+        - "{{ user2 }}"
+        - "{{ user3 }}"
+        - "{{ user4 }}"
+      tags:
+        - iam_user_new
+        - iam_user_key
+
+    - name: List user's keys
+      shell: 'cat key_list.txt | grep "UserName\|AccessKeyId\|SecretAccessKey" | sed "s/,$//"'
+      register: list_key
+      tags:
+        - iam_user_new
+        - iam_user_key
+
+    - debug:
+        var: list_key.stdout_lines
+      tags:
+        - iam_user_new
+        - iam_user_key
+
+    - name: Create user's password
+      command: aws iam create-login-profile --user-name "{{ item.name }}" --password "{{ item.pass }}" --password-reset-required
+      loop:
+        - { name: "{{ user1 }}", pass: "{{ temp_pass }}" }
+        - { name: "{{ user2 }}", pass: "{{ temp_pass }}" }
+        - { name: "{{ user3 }}", pass: "{{ temp_pass }}" }
+        - { name: "{{ user4 }}", pass: "{{ temp_pass }}" }
+      tags:
+        - iam_user_new
+        - iam_user_pass
+
